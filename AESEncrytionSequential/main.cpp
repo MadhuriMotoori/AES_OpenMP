@@ -2,7 +2,6 @@
 //  main.cpp
 //  AESEncrytionSequential
 //
-//  Created by Akhil C Balan on 12/13/16.
 //  Copyright (c) 2016 TusharaSankaranArakkan. All rights reserved.
 //
 
