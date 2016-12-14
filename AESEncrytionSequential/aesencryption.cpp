@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include <stdio.h>
+#include "aesencryption.h"
 
 //key length (128 bit or 192 bit or 256 bit)
 int keyLength = 0;
@@ -22,7 +23,7 @@ unsigned char input[16];
 //input state array
 unsigned char inputStateArray[4][4];
 //output - encrypted text
-unsigned char result[16];
+unsigned char* result;
 //key - 128 bit (4x4), 192 bit(6x4), 256 bit (8x4)
 unsigned char key[16];
 //stores round key - 128 bit 44 words
@@ -188,27 +189,10 @@ void encrypt() {
     }
 }
 
-int main(int argc, const char * argv[]) {
-   
-    //Get the block/key length from user
-    bool check = false;
-    while(!check) {
-    printf("Enter the key length/block length : ");
-    scanf("%d",&keyLength);
-        if(keyLength==128||keyLength==192||keyLength==256)
-            check = true;
-    }
+unsigned char* encrypt_block(unsigned char keyTemp[], unsigned char textTemp[], unsigned char output[]){
     
-    //calculating the number of words from key length
-    totalWords = keyLength/32;
-    //calculating the number of rounds
-    totalRounds = totalWords + 6;
-    
-    //get the plain text from user (for testing purpose taking readymade values) - 128 bit
-    unsigned char keyTemp[16] = {0x00  ,0x01  ,0x02  ,0x03  ,0x04  ,0x05  ,0x06  ,0x07  ,0x08  ,0x09  ,0x0a  ,0x0b  ,0x0c  ,0x0d  ,0x0e  ,0x0f};
-    unsigned char textTemp[16]= {0x00  ,0x11  ,0x22  ,0x33  ,0x44  ,0x55  ,0x66  ,0x77  ,0x88  ,0x99  ,0xaa  ,0xbb  ,0xcc  ,0xdd  ,0xee  ,0xff};
-    
-    for(int i=0;i<totalWords*4;i++) {
+    for (int i=0;i< totalWords*4;++i)
+    {
         key[i] = keyTemp[i];
         input[i] = textTemp[i];
     }
@@ -219,6 +203,7 @@ int main(int argc, const char * argv[]) {
             inputStateArray[j][i] = input[4 * i + j];
         }
     }
+    
     //first step is to perform key expansion
     keyExpansion();
     //second step is the xor the input and first 4 words of the key
@@ -229,33 +214,10 @@ int main(int argc, const char * argv[]) {
     //converting the result into 1D
     for(int i=0;i<totalWords;i++) {
         for(int j=0;j<4;j++) {
-            result[4 * i + j] = inputStateArray[j][i] ;
+            output[4 * i + j] = inputStateArray[j][i] ;
         }
     }
-    //output the input
-    printf("\nPlain Text -------------------------\n");
-    for(int i=0;i<totalWords*4;i++)
-    {
-        printf("%02x ",input[i]);
-    }
-    printf("\n");
-    
-    //output the result
-    printf("\nEncryted Text -------------------------\n");
-    for(int i=0;i<totalWords*4;i++)
-    {
-        printf("%02x ",result[i]);
-    }
-    printf("\n");
-    
-    //output the result
-    printf("\nRoundKey -------------------------\n");
-    for(int i=0;i<240;i++)
-    {
-        printf("%02x ",roundKey[i]);
-    }
-    printf("\n");
-    return 0;
+    return output;
 }
 
 
