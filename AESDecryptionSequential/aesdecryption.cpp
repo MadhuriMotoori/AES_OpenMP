@@ -8,7 +8,7 @@
 #include <iostream>
 #include <sys/time.h>
 struct timeval start, end;
-
+unsigned char inputStateArray_D[4][4];
 
 int getSBoxInvert(int num)
 {
@@ -36,13 +36,12 @@ int getSBoxInvert(int num)
 
 void addRoundKeyInverse(int roundNo) {
     int val = roundNo * totalColumn * 4;
-    #pragma parallel for
     for(int i=0;i<4;i++)
     {
         for(int j=0;j<4;j++)
         {
             int indexVal = val + i * totalColumn + j;
-            inputStateArray[j][i] = inputStateArray[j][i] ^ roundKey[indexVal] ;
+            inputStateArray_D[j][i] = inputStateArray_D[j][i] ^ roundKey[indexVal] ;
         }
     }
     
@@ -50,7 +49,7 @@ void addRoundKeyInverse(int roundNo) {
 void byteSubstitutionInverse() {
     for(int i=0;i<totalWords;i++) {
         for(int j=0;j<4;j++) {
-            inputStateArray[i][j] = getSBoxInvert(inputStateArray[i][j]);
+            inputStateArray_D[i][j] = getSBoxInvert(inputStateArray_D[i][j]);
         }
     }
     
@@ -60,26 +59,26 @@ void rowShiftingInverse() {
     //no changes to first row
     
     //circularly shifting second row by 1 bytes to right
-    char temp=inputStateArray[1][3];
-    inputStateArray[1][3]=inputStateArray[1][2];
-    inputStateArray[1][2]=inputStateArray[1][1];
-    inputStateArray[1][1]=inputStateArray[1][0];
-    inputStateArray[1][0]=temp;
+    char temp=inputStateArray_D[1][3];
+    inputStateArray_D[1][3]=inputStateArray_D[1][2];
+    inputStateArray_D[1][2]=inputStateArray_D[1][1];
+    inputStateArray_D[1][1]=inputStateArray_D[1][0];
+    inputStateArray_D[1][0]=temp;
     
     //circularly shifting third row by 2 bytes to right
-    temp=inputStateArray[2][0];
-    inputStateArray[2][0]=inputStateArray[2][2];
-    inputStateArray[2][2]=temp;
-    temp=inputStateArray[2][1];
-    inputStateArray[2][1]=inputStateArray[2][3];
-    inputStateArray[2][3]=temp;
+    temp=inputStateArray_D[2][0];
+    inputStateArray_D[2][0]=inputStateArray_D[2][2];
+    inputStateArray_D[2][2]=temp;
+    temp=inputStateArray_D[2][1];
+    inputStateArray_D[2][1]=inputStateArray_D[2][3];
+    inputStateArray_D[2][3]=temp;
     
     //circularly shifting fourth row by 3 bytes to right
-    temp=inputStateArray[3][0];
-    inputStateArray[3][0]=inputStateArray[3][1];
-    inputStateArray[3][1]=inputStateArray[3][2];
-    inputStateArray[3][2]=inputStateArray[3][3];
-    inputStateArray[3][3]=temp;
+    temp=inputStateArray_D[3][0];
+    inputStateArray_D[3][0]=inputStateArray_D[3][1];
+    inputStateArray_D[3][1]=inputStateArray_D[3][2];
+    inputStateArray_D[3][2]=inputStateArray_D[3][3];
+    inputStateArray_D[3][3]=temp;
 }
 
 // xtime is a macro that finds the product of {02} and the argument to xtime modulo {1b}
@@ -93,14 +92,14 @@ void columnMixingInverse() {
     unsigned char a,b,c,d;
     for(i=0;i<4;i++)
     {
-        a = inputStateArray[0][i];
-        b = inputStateArray[1][i];
-        c = inputStateArray[2][i];
-        d = inputStateArray[3][i];
-        inputStateArray[0][i] = Multiply(a, 0x0e) ^ Multiply(b, 0x0b) ^ Multiply(c, 0x0d) ^ Multiply(d, 0x09);
-        inputStateArray[1][i] = Multiply(a, 0x09) ^ Multiply(b, 0x0e) ^ Multiply(c, 0x0b) ^ Multiply(d, 0x0d);
-        inputStateArray[2][i] = Multiply(a, 0x0d) ^ Multiply(b, 0x09) ^ Multiply(c, 0x0e) ^ Multiply(d, 0x0b);
-        inputStateArray[3][i] = Multiply(a, 0x0b) ^ Multiply(b, 0x0d) ^ Multiply(c, 0x09) ^ Multiply(d, 0x0e);
+        a = inputStateArray_D[0][i];
+        b = inputStateArray_D[1][i];
+        c = inputStateArray_D[2][i];
+        d = inputStateArray_D[3][i];
+        inputStateArray_D[0][i] = Multiply(a, 0x0e) ^ Multiply(b, 0x0b) ^ Multiply(c, 0x0d) ^ Multiply(d, 0x09);
+        inputStateArray_D[1][i] = Multiply(a, 0x09) ^ Multiply(b, 0x0e) ^ Multiply(c, 0x0b) ^ Multiply(d, 0x0d);
+        inputStateArray_D[2][i] = Multiply(a, 0x0d) ^ Multiply(b, 0x09) ^ Multiply(c, 0x0e) ^ Multiply(d, 0x0b);
+        inputStateArray_D[3][i] = Multiply(a, 0x0b) ^ Multiply(b, 0x0d) ^ Multiply(c, 0x09) ^ Multiply(d, 0x0e);
     }
     
 }
@@ -116,8 +115,8 @@ void decrypt() {
     }
 }
 
-unsigned char* decrypt_block(unsigned char keyTemp[], unsigned char textTemp[], unsigned char output[]){
-    
+unsigned char* decrypt_block(unsigned char keyTemp[], unsigned char textTemp[], unsigned char output[], int blockcount){
+    int blockcounter = blockcount * 16;
     for (int i=0;i< totalWords*4;++i)
     {
         key[i] = keyTemp[i];
@@ -127,21 +126,47 @@ unsigned char* decrypt_block(unsigned char keyTemp[], unsigned char textTemp[], 
     //convert the 1D input to 2D input state array
     for(int i=0;i<totalWords;i++) {
         for(int j=0;j<4;j++) {
-            inputStateArray[j][i] = input[4 * i + j];
+            inputStateArray_D[j][i] = textTemp[blockcounter];
+            blockcounter++;
         }
     }
     
+    
+    printf("\nCipher Text U -------------------------\n");
+    
+    for(int i=0;i<totalWords;i++) {
+        for(int j=0;j<4;j++) {
+            
+            printf("%02x ",  inputStateArray_D[j][i] );
+            
+        }
+        
+        printf("\n");
+    }
+    
     //first step is to perform key expansion
-    keyExpansion();
+   // keyExpansion();
     //second step is the xor the input and last 4 words of the key schedule
     addRoundKeyInverse(totalRounds);
     //third step is to start 10 rounds
     decrypt();
     
+    printf("\nCipher Text U -------------------------\n");
+    
+    for(int i=0;i<totalWords;i++) {
+        for(int j=0;j<4;j++) {
+            
+            printf("%02x ",  inputStateArray_D[j][i] );
+            
+        }
+        
+        printf("\n");
+    }
+    blockcounter = blockcount * 16;
     //converting the result into 1D
     for(int i=0;i<totalWords;i++) {
         for(int j=0;j<4;j++) {
-            output[4 * i + j] = inputStateArray[j][i] ;
+            output[blockcounter] = inputStateArray_D[j][i] ;
         }
     }    
     return output;

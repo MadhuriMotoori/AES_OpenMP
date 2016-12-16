@@ -10,7 +10,7 @@
 #include "../AESEncrytionSequential/aesencryption.cpp"
 #include "../AESDecryptionSequential/aesdecryption.cpp"
 #include <omp.h>
-
+/*
 
 int main(int argc, const char * argv[]) {
     double time_initial = omp_get_wtime();
@@ -67,5 +67,5 @@ int main(int argc, const char * argv[]) {
 
     return 0;
 }
-
+*/
 
