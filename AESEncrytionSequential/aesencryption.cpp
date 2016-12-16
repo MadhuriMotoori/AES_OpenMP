@@ -273,14 +273,14 @@ void createOutputArray(int blockcount, int filesize, unsigned char output[][16],
     }
     
     
-    result = output;*/
+    result = output;
     
-  /*  printf("\nResult Text -------------------------\n %d", blockcounter);
+    printf("\nResult Text -------------------------\n %d", blockcounter);
     for(int i=0;i< 16 ;i++)
     {
         printf("%02x ",output[blockcount][i]);
     }
-    printf("\n");*/
+    printf("\n"); */
     
 }
 #include "../AESDecryptionSequential/aesdecryption.cpp"
@@ -320,13 +320,14 @@ int main(int argc, const char * argv[]) {
     int block_count = 0;
     int blockcounter;
     int tid, tids;
-     omp_set_num_threads(1);
+     omp_set_num_threads(4);
     printf("Number of threads %d", omp_get_num_threads);
     unsigned char output[total_blocks][16];
     //input state array
     unsigned char inputStateArray[4][4];
+    unsigned char result_final[total_blocks][16];
     int j;
-    #pragma omp parallel private(inputStateArray, block_count, tid,tids, output) shared(textTemp, filesize, total_blocks)
+    #pragma omp parallel private(inputStateArray, block_count, tid,tids, output) shared(textTemp, filesize, total_blocks, result_final)
     {
         block_count = tid = omp_get_thread_num();
         tids = omp_get_num_threads();
@@ -342,7 +343,19 @@ int main(int argc, const char * argv[]) {
             encrypt(inputStateArray);
             createOutputArray(block_count, filesize, output, inputStateArray);
            // block_count += tids;
-        }
+            
+            //#pragma omp single
+            //for(int i=0;i<total_blocks;i++) {
+                for(int j=0;j<16;j++) {
+                    
+                    result_final[block_count][j] = output[block_count][j];
+                    //printf("%02x ",  output[block_count][j] );
+                    
+                }
+                
+               // printf("\n");
+            }
+        
         
         double time_final = omp_get_wtime();
         printf("\nTime taken before(%f) after: (%f) sub: (%f)\n" , begin_time, time_final, time_final - begin_time);
@@ -350,6 +363,20 @@ int main(int argc, const char * argv[]) {
     fclose(ft);
     double over_time_final = omp_get_wtime();
     printf("\nTime taken is: (%f)\n" , over_time_final - time_initial);
+    
+ /*   printf("\nOutput Text Outside -------------------------\n");
+    for(int i=0;i<total_blocks;i++) {
+        for(int j=0;j<16;j++) {
+            
+            //result_final[block_count][j] = output[block_count][j];
+            printf(" %02x ",  result_final[i][j] );
+            
+        }
+        
+        printf("\n");
+    }
+    */
+
     
   /*
     printf("\nCipher Text -------------------------\n");
