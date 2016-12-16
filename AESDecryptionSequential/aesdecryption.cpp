@@ -8,7 +8,6 @@
 #include <iostream>
 #include <sys/time.h>
 struct timeval start, end;
-unsigned char inputStateArray_D[4][4];
 
 int getSBoxInvert(int num)
 {
@@ -34,51 +33,51 @@ int getSBoxInvert(int num)
 }
 
 
-void addRoundKeyInverse(int roundNo) {
+void addRoundKeyInverse(int roundNo,unsigned char inputStateArray[4][4]) {
     int val = roundNo * totalColumn * 4;
     for(int i=0;i<4;i++)
     {
         for(int j=0;j<4;j++)
         {
             int indexVal = val + i * totalColumn + j;
-            inputStateArray_D[j][i] = inputStateArray_D[j][i] ^ roundKey[indexVal] ;
+            inputStateArray[j][i] = inputStateArray[j][i] ^ roundKey[indexVal] ;
         }
     }
     
 }
-void byteSubstitutionInverse() {
+void byteSubstitutionInverse(unsigned char inputStateArray[4][4]) {
     for(int i=0;i<totalWords;i++) {
         for(int j=0;j<4;j++) {
-            inputStateArray_D[i][j] = getSBoxInvert(inputStateArray_D[i][j]);
+            inputStateArray[i][j] = getSBoxInvert(inputStateArray[i][j]);
         }
     }
     
 }
-void rowShiftingInverse() {
+void rowShiftingInverse(unsigned char inputStateArray[4][4]) {
     
     //no changes to first row
     
     //circularly shifting second row by 1 bytes to right
-    char temp=inputStateArray_D[1][3];
-    inputStateArray_D[1][3]=inputStateArray_D[1][2];
-    inputStateArray_D[1][2]=inputStateArray_D[1][1];
-    inputStateArray_D[1][1]=inputStateArray_D[1][0];
-    inputStateArray_D[1][0]=temp;
+    char temp=inputStateArray[1][3];
+    inputStateArray[1][3]=inputStateArray[1][2];
+    inputStateArray[1][2]=inputStateArray[1][1];
+    inputStateArray[1][1]=inputStateArray[1][0];
+    inputStateArray[1][0]=temp;
     
     //circularly shifting third row by 2 bytes to right
-    temp=inputStateArray_D[2][0];
-    inputStateArray_D[2][0]=inputStateArray_D[2][2];
-    inputStateArray_D[2][2]=temp;
-    temp=inputStateArray_D[2][1];
-    inputStateArray_D[2][1]=inputStateArray_D[2][3];
-    inputStateArray_D[2][3]=temp;
+    temp=inputStateArray[2][0];
+    inputStateArray[2][0]=inputStateArray[2][2];
+    inputStateArray[2][2]=temp;
+    temp=inputStateArray[2][1];
+    inputStateArray[2][1]=inputStateArray[2][3];
+    inputStateArray[2][3]=temp;
     
     //circularly shifting fourth row by 3 bytes to right
-    temp=inputStateArray_D[3][0];
-    inputStateArray_D[3][0]=inputStateArray_D[3][1];
-    inputStateArray_D[3][1]=inputStateArray_D[3][2];
-    inputStateArray_D[3][2]=inputStateArray_D[3][3];
-    inputStateArray_D[3][3]=temp;
+    temp=inputStateArray[3][0];
+    inputStateArray[3][0]=inputStateArray[3][1];
+    inputStateArray[3][1]=inputStateArray[3][2];
+    inputStateArray[3][2]=inputStateArray[3][3];
+    inputStateArray[3][3]=temp;
 }
 
 // xtime is a macro that finds the product of {02} and the argument to xtime modulo {1b}
@@ -87,34 +86,41 @@ void rowShiftingInverse() {
 #define Multiply(x,y) (((y & 1) * x) ^ ((y>>1 & 1) * xtime(x)) ^ ((y>>2 & 1) * xtime(xtime(x))) ^ ((y>>3 & 1) * xtime(xtime(xtime(x)))) ^ ((y>>4 & 1) * xtime(xtime(xtime(xtime(x))))))
 
 
-void columnMixingInverse() {
+void columnMixingInverse(unsigned char inputStateArray[4][4]) {
     int i;
     unsigned char a,b,c,d;
     for(i=0;i<4;i++)
     {
-        a = inputStateArray_D[0][i];
-        b = inputStateArray_D[1][i];
-        c = inputStateArray_D[2][i];
-        d = inputStateArray_D[3][i];
-        inputStateArray_D[0][i] = Multiply(a, 0x0e) ^ Multiply(b, 0x0b) ^ Multiply(c, 0x0d) ^ Multiply(d, 0x09);
-        inputStateArray_D[1][i] = Multiply(a, 0x09) ^ Multiply(b, 0x0e) ^ Multiply(c, 0x0b) ^ Multiply(d, 0x0d);
-        inputStateArray_D[2][i] = Multiply(a, 0x0d) ^ Multiply(b, 0x09) ^ Multiply(c, 0x0e) ^ Multiply(d, 0x0b);
-        inputStateArray_D[3][i] = Multiply(a, 0x0b) ^ Multiply(b, 0x0d) ^ Multiply(c, 0x09) ^ Multiply(d, 0x0e);
+        a = inputStateArray[0][i];
+        b = inputStateArray[1][i];
+        c = inputStateArray[2][i];
+        d = inputStateArray[3][i];
+        inputStateArray[0][i] = Multiply(a, 0x0e) ^ Multiply(b, 0x0b) ^ Multiply(c, 0x0d) ^ Multiply(d, 0x09);
+        inputStateArray[1][i] = Multiply(a, 0x09) ^ Multiply(b, 0x0e) ^ Multiply(c, 0x0b) ^ Multiply(d, 0x0d);
+        inputStateArray[2][i] = Multiply(a, 0x0d) ^ Multiply(b, 0x09) ^ Multiply(c, 0x0e) ^ Multiply(d, 0x0b);
+        inputStateArray[3][i] = Multiply(a, 0x0b) ^ Multiply(b, 0x0d) ^ Multiply(c, 0x09) ^ Multiply(d, 0x0e);
     }
     
 }
 
-void decrypt() {
+void decrypt(unsigned char inputStateArray[4][4]) {
+
+    //first step is to perform key expansion
+    keyExpansion();
+    //second step is the xor the input and last 4 words of the key schedule
+    addRoundKeyInverse(totalRounds, inputStateArray);
+    //third step is to start 10 rounds
     for(int i=totalRounds-1;i>=0;i--) {
-        rowShiftingInverse();
-        byteSubstitutionInverse();
-        addRoundKeyInverse(i);
+        rowShiftingInverse(inputStateArray);
+        byteSubstitutionInverse(inputStateArray);
+        addRoundKeyInverse(i, inputStateArray);
         if(i!=0)
-        columnMixingInverse();
+        columnMixingInverse(inputStateArray);
         
     }
+    
 }
-
+/*
 unsigned char* decrypt_block(unsigned char keyTemp[], unsigned char textTemp[], unsigned char output[], int blockcount){
     int blockcounter = blockcount * 16;
     for (int i=0;i< totalWords*4;++i)
@@ -126,7 +132,7 @@ unsigned char* decrypt_block(unsigned char keyTemp[], unsigned char textTemp[], 
     //convert the 1D input to 2D input state array
     for(int i=0;i<totalWords;i++) {
         for(int j=0;j<4;j++) {
-            inputStateArray_D[j][i] = textTemp[blockcounter];
+            inputStateArray[j][i] = textTemp[blockcounter];
             blockcounter++;
         }
     }
@@ -137,18 +143,14 @@ unsigned char* decrypt_block(unsigned char keyTemp[], unsigned char textTemp[], 
     for(int i=0;i<totalWords;i++) {
         for(int j=0;j<4;j++) {
             
-            printf("%02x ",  inputStateArray_D[j][i] );
+            printf("%02x ",  inputStateArray[j][i] );
             
         }
         
         printf("\n");
     }
     
-    //first step is to perform key expansion
-   // keyExpansion();
-    //second step is the xor the input and last 4 words of the key schedule
-    addRoundKeyInverse(totalRounds);
-    //third step is to start 10 rounds
+
     decrypt();
     
     printf("\nCipher Text U -------------------------\n");
@@ -156,7 +158,7 @@ unsigned char* decrypt_block(unsigned char keyTemp[], unsigned char textTemp[], 
     for(int i=0;i<totalWords;i++) {
         for(int j=0;j<4;j++) {
             
-            printf("%02x ",  inputStateArray_D[j][i] );
+            printf("%02x ",  inputStateArray[j][i] );
             
         }
         
@@ -166,12 +168,157 @@ unsigned char* decrypt_block(unsigned char keyTemp[], unsigned char textTemp[], 
     //converting the result into 1D
     for(int i=0;i<totalWords;i++) {
         for(int j=0;j<4;j++) {
-            output[blockcounter] = inputStateArray_D[j][i] ;
+            output[blockcounter] = inputStateArray[j][i] ;
         }
     }    
     return output;
 }
 
+
+int main(int argc, const char * argv[]) {
+    FILE *fw = fopen("decrypted.txt","w");
+    double time_initial = omp_get_wtime();
+    unsigned char* decrypt_result;
+    keyLength=128;
+    //calculating the number of words from key length
+    totalWords = keyLength/32;
+    //calculating the number of rounds
+    totalRounds = totalWords + 6;
+    //get the plain text from user (for testing purpose taking readymade values) - 128 bit
+    
+    int filesize;
+    FILE *ft = fopen("cipher.txt","r"); //Input file data
+    fseek(ft,0L,SEEK_END);
+    filesize = ftell(ft) - 1;
+    rewind(ft);
+    printf("FileSize %d", filesize);
+    unsigned char textTemp[filesize];
+    
+    for(int fcount = 0;fcount < filesize; fcount += 1) {
+        unsigned char c=0x00000000;
+        void *t = &c;
+        int sz;
+        sz = fread(t,1,1,ft);
+        unsigned char temp = sz?c:0x00;
+        textTemp[fcount] = temp;
+        // printf(" %c ", temp);
+        c=0x00000000;
+        
+    }
+    
+    int total_blocks = (filesize / 16);
+    printf("Total blocks %d", total_blocks);
+    int block_count = 0;
+    int blockcounter;
+    int tid, tids;
+    omp_set_num_threads(4);
+    printf("Number of threads %d", omp_get_num_threads);
+    unsigned char output[total_blocks][16];
+    //input state array
+    unsigned char inputStateArray[4][4];
+    unsigned char result_final[total_blocks][16];
+    int j;
+    #pragma omp parallel private(inputStateArray, block_count, tid,tids, output) shared(textTemp, filesize, total_blocks, result_final)
+    {
+        block_count = tid = omp_get_thread_num();
+        tids = omp_get_num_threads();
+        
+        printf("Number of thread %d %d", tids, tid);
+        double begin_time = omp_get_wtime();
+        //  printf("\nTime taken is: (%f)\n" , time_final);
+        
+        for(block_count = omp_get_thread_num(); block_count < total_blocks; block_count+=tids) {
+            //blockcounter  = block_count * 16;
+            
+            createStateArray(block_count, filesize, textTemp, inputStateArray);
+            decrypt(inputStateArray);
+            createOutputArray(block_count, filesize, output, inputStateArray);
+            // block_count += tids;
+            
+            //#pragma omp single
+            //for(int i=0;i<total_blocks;i++) {
+            for(int j=0;j<16;j++) {
+                
+                result_final[block_count][j] = output[block_count][j];
+                //printf("%02x ",  output[block_count][j] );
+                
+            }
+            
+            // printf("\n");
+        }
+        
+        
+        double time_final = omp_get_wtime();
+        printf("\nTime taken before(%f) after: (%f) sub: (%f)\n" , begin_time, time_final, time_final - begin_time);
+    }
+    fclose(ft);
+    double over_time_final = omp_get_wtime();
+    printf("\nTime taken is: (%f)\n" , over_time_final - time_initial);
+    
+    printf("\nOutput Text Outside -------------------------\n");
+    void* l;
+    for(int i=0;i<total_blocks;i++) {
+        for(int j=0;j<16;j++) {
+            
+            //result_final[block_count][j] = output[block_count][j];
+            // printf(" %02x ",  result_final[i][j] );
+            
+            l = &result_final[i][j];
+            fwrite(l,1,1,fw);
+            
+        }
+        
+        printf("\n");
+    }
+    
+    
+    
+    /*
+     printf("\nCipher Text -------------------------\n");
+     for(int i=0;i< filesize ;i++)
+     {
+     printf("%02x ",result[i]);
+     }
+     printf("\n");
+     
+     printf("\nCipher Text -------------------------\n");
+     for(int i=16;i< 32 ;i++)
+     {
+     printf("%02x ",result[i]);
+     }
+     printf("\n");
+     
+     fclose(ft);
+     double time_final = omp_get_wtime();
+     printf("\nTime taken is: (%f)\n" , time_final - time_initial);
+     //    result = decrypt_block(keyTemp, encrypt_result, output);
+     /*  unsigned char decrypt_output[filesize];
+     unsigned char* decrypt_result;
+     block_count = 0;
+     while(block_count < total_blocks) {
+     //blockcounter  = block_count * 16;
+     decrypt_result = decrypt_block(key, result, decrypt_output, block_count);
+     block_count ++;
+     }
+     
+     printf("\nNormal Text -------------------------\n");
+     for(int i=0;i< filesize ;i++)
+     {
+     printf("%02x ",decrypt_result[i]);
+     }
+     printf("\n");
+     
+     void* l;
+     for(int i=0;i<filesize;i++) {
+     l = &decrypt_result[i];
+     fwrite(l,1,1,fw);
+     }
+     printf("Out of the for loop");
+    fclose(fw);
+    
+    return 0;
+}
+*/
 
 
 

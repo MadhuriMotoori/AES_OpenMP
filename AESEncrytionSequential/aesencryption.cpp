@@ -227,10 +227,10 @@ void createStateArray(int blockcount, int filesize, unsigned char textTemp[],
             }
         }
     }
-  /*
-    printf("\nNormal Text U -------------------------\n");
+  
+   // printf("\nNormal Text U -------------------------\n");
     
-    for(int i=0;i<totalWords;i++) {
+ /*   for(int i=0;i<totalWords;i++) {
         for(int j=0;j<4;j++) {
             
                printf("%02x ",  inputStateArray[j][i] );
@@ -239,8 +239,8 @@ void createStateArray(int blockcount, int filesize, unsigned char textTemp[],
         
         printf("\n");
     }
-    */
     
+    */
 }
 
 void createOutputArray(int blockcount, int filesize, unsigned char output[][16],  unsigned char inputStateArray[4][4]){
@@ -283,10 +283,10 @@ void createOutputArray(int blockcount, int filesize, unsigned char output[][16],
     printf("\n"); */
     
 }
-#include "../AESDecryptionSequential/aesdecryption.cpp"
 
-int main(int argc, const char * argv[]) {
-    FILE *fw = fopen("decrypted.txt","w");
+
+/*int main(int argc, const char * argv[]) {
+    FILE *fw = fopen("cipher.txt","w");
     double time_initial = omp_get_wtime();
     unsigned char* encrypt_result;
     keyLength=128;
@@ -364,18 +364,22 @@ int main(int argc, const char * argv[]) {
     double over_time_final = omp_get_wtime();
     printf("\nTime taken is: (%f)\n" , over_time_final - time_initial);
     
- /*   printf("\nOutput Text Outside -------------------------\n");
+    printf("\nOutput Text Outside -------------------------\n");
+    void* l;
     for(int i=0;i<total_blocks;i++) {
         for(int j=0;j<16;j++) {
             
             //result_final[block_count][j] = output[block_count][j];
-            printf(" %02x ",  result_final[i][j] );
+           // printf(" %02x ",  result_final[i][j] );
+            
+            l = &result_final[i][j];
+            fwrite(l,1,1,fw);
             
         }
         
         printf("\n");
     }
-    */
+    
 
     
   /*
@@ -418,11 +422,11 @@ int main(int argc, const char * argv[]) {
         l = &decrypt_result[i];
         fwrite(l,1,1,fw);
     }
-    printf("Out of the for loop"); */
+    printf("Out of the for loop");
     fclose(fw);
 
     return 0;
-}
+}*/
 
 
 
