@@ -243,14 +243,14 @@ void createStateArray(int blockcount, int filesize, unsigned char textTemp[],
     
 }
 
-void createOutputArray(int blockcount, int filesize, unsigned char output[],  unsigned char inputStateArray[4][4]){
+void createOutputArray(int blockcount, int filesize, unsigned char output[][16],  unsigned char inputStateArray[4][4]){
     int blockcounter = blockcount * 16;
-    printf("Block counter %d", blockcounter);
+  //  printf("Block counter %d", blockcounter);
     //converting the result into 1D
     for(int i=0;i<totalWords;i++) {
         for(int j=0;j<4;j++) {
             if(blockcounter < filesize) {
-                output[blockcounter] = inputStateArray[j][i] ;
+                output[blockcount][4* i + j] = inputStateArray[j][i] ;
                // printf("%02x %02x ", output[blockcounter] ,inputStateArray[j][i] );
                 
                 blockcounter ++;
@@ -258,7 +258,7 @@ void createOutputArray(int blockcount, int filesize, unsigned char output[],  un
         }
     }
     
-     result = output;
+   //  result = output;
  /*
     printf("\nENCRYPT Text U -------------------------\n");
     
@@ -273,15 +273,15 @@ void createOutputArray(int blockcount, int filesize, unsigned char output[],  un
     }
     
     
-    result = output;
+    result = output;*/
     
-    printf("\nResult Text -------------------------\n");
-    for(int i=0;i< filesize ;i++)
+  /*  printf("\nResult Text -------------------------\n %d", blockcounter);
+    for(int i=0;i< 16 ;i++)
     {
-        printf("%02x ",output[i]);
+        printf("%02x ",output[blockcount][i]);
     }
-    printf("\n");
-    */
+    printf("\n");*/
+    
 }
 #include "../AESDecryptionSequential/aesdecryption.cpp"
 
@@ -303,7 +303,7 @@ int main(int argc, const char * argv[]) {
     rewind(ft);
     printf("FileSize %d", filesize);
     unsigned char textTemp[filesize];
-    unsigned char output[filesize];
+  
     for(int fcount = 0;fcount < filesize; fcount += 1) {
         unsigned char c=0x00000000;
         void *t = &c;
@@ -321,10 +321,12 @@ int main(int argc, const char * argv[]) {
     int blockcounter;
     int tid, tids;
      omp_set_num_threads(1);
+    printf("Number of threads %d", omp_get_num_threads);
+    unsigned char output[total_blocks][16];
     //input state array
     unsigned char inputStateArray[4][4];
     int j;
-    #pragma omp parallel private(inputStateArray, block_count, tid,tids) shared(textTemp, filesize, total_blocks, output)
+    #pragma omp parallel private(inputStateArray, block_count, tid,tids, output) shared(textTemp, filesize, total_blocks)
     {
         block_count = tid = omp_get_thread_num();
         tids = omp_get_num_threads();
@@ -332,13 +334,13 @@ int main(int argc, const char * argv[]) {
         printf("Number of thread %d %d", tids, tid);
         double begin_time = omp_get_wtime();
       //  printf("\nTime taken is: (%f)\n" , time_final);
-       // #pragma omp for
+       
         for(block_count = omp_get_thread_num(); block_count < total_blocks; block_count+=tids) {
             //blockcounter  = block_count * 16;
             
             createStateArray(block_count, filesize, textTemp, inputStateArray);
             encrypt(inputStateArray);
-           // createOutputArray(block_count, filesize, output, inputStateArray);
+            createOutputArray(block_count, filesize, output, inputStateArray);
            // block_count += tids;
         }
         
