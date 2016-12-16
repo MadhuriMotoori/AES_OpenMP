@@ -7,7 +7,6 @@
 
 #include <iostream>
 #include <stdio.h>
-#include "aesencryption.h"
 
 //key length (128 bit or 192 bit or 256 bit)
 int keyLength = 0;
@@ -179,6 +178,7 @@ void columnMixing() {
     }
     
 }
+
 void encrypt() {
     for(int i=1;i<=totalRounds;i++) {
         byteSubstitution();
@@ -190,6 +190,7 @@ void encrypt() {
 }
 
 unsigned char* encrypt_block(unsigned char keyTemp[], unsigned char textTemp[], unsigned char output[]){
+    
     
     for (int i=0;i< totalWords*4;++i)
     {

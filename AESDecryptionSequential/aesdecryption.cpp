@@ -7,7 +7,6 @@
 
 #include <iostream>
 #include <sys/time.h>
-#include "aesdecryption.h"
 struct timeval start, end;
 
 
@@ -37,7 +36,7 @@ int getSBoxInvert(int num)
 
 void addRoundKeyInverse(int roundNo) {
     int val = roundNo * totalColumn * 4;
-
+    #pragma parallel for
     for(int i=0;i<4;i++)
     {
         for(int j=0;j<4;j++)
