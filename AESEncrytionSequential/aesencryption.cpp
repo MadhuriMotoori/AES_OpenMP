@@ -211,7 +211,7 @@ void createOutputArray(int blockcount, int filesize, unsigned char output[][16],
     for(int i=0;i<totalWords;i++) {
         for(int j=0;j<4;j++) {
             if(blockcounter < filesize) {
-                output[blockcount][4* i + j] = inputStateArray[j][i] ;                
+                output[blockcount][4* i + j] = inputStateArray[j][i] ;
                 blockcounter ++;
             }
         }
