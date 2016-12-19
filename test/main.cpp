@@ -16,8 +16,8 @@
 static void generateTestData();
 int main(int argc, const char * argv[]) {
 
-    //generateTestData();
-   
+//    generateTestData();
+
     double time_initial = omp_get_wtime();
     keyLength=128;
     //calculating the number of words from key length
@@ -123,16 +123,16 @@ void generateTestData(){
     char testinputs[][5] = {"tush", "madh", "jaya", "abcd", "efgh", "tmmr", "baga", "umbe", "jita", "gaut"};
     
     ofstream myfile;
-    myfile.open ("data_10MB.txt");
+    myfile.open ("data_800KB.txt");
     
-    int n = 62500000 * 4;
+    int n = 50000 * 4;
     
     for(int i =0; i < n; i++ ){
         myfile << testinputs[(rand() % 10)];
     }
     
     myfile.close();
-}*/
-     
+}
+     */
 
 

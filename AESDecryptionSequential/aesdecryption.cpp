@@ -9,7 +9,7 @@
 #include <sys/time.h>
 struct timeval start, end;
 
-int getSBoxInvert(int num)
+int invertSBoxVal(int num)
 {
     int rsbox[256] =
     { 0x52, 0x09, 0x6a, 0xd5, 0x30, 0x36, 0xa5, 0x38, 0xbf, 0x40, 0xa3, 0x9e, 0x81, 0xf3, 0xd7, 0xfb
@@ -48,7 +48,7 @@ void addRoundKeyInverse(int roundNo,unsigned char inputStateArray[4][4]) {
 void byteSubstitutionInverse(unsigned char inputStateArray[4][4]) {
     for(int i=0;i<totalWords;i++) {
         for(int j=0;j<4;j++) {
-            inputStateArray[i][j] = getSBoxInvert(inputStateArray[i][j]);
+            inputStateArray[i][j] = invertSBoxVal(inputStateArray[i][j]);
         }
     }
     
@@ -80,10 +80,8 @@ void rowShiftingInverse(unsigned char inputStateArray[4][4]) {
     inputStateArray[3][3]=temp;
 }
 
-// xtime is a macro that finds the product of {02} and the argument to xtime modulo {1b}
-#define xtime(x)   ((x<<1) ^ (((x>>7) & 1) * 0x1b))
-// Multiplty is a macro used to multiply numbers in the field GF(2^8)
-#define Multiply(x,y) (((y & 1) * x) ^ ((y>>1 & 1) * xtime(x)) ^ ((y>>2 & 1) * xtime(xtime(x))) ^ ((y>>3 & 1) * xtime(xtime(xtime(x)))) ^ ((y>>4 & 1) * xtime(xtime(xtime(xtime(x))))))
+#define getProduct(x)   ((x<<1) ^ (((x>>7) & 1) * 0x1b))
+#define Multiply(x,y) (((y & 1) * x) ^ ((y>>1 & 1) * getProduct(x)) ^ ((y>>2 & 1) * getProduct(getProduct(x))) ^ ((y>>3 & 1) * getProduct(getProduct(getProduct(x)))) ^ ((y>>4 & 1) * getProduct(getProduct(getProduct(getProduct(x))))))
 
 
 void columnMixingInverse(unsigned char inputStateArray[4][4]) {
