@@ -10,8 +10,8 @@
 #include "../AESEncrytionSequential/aesencryption.cpp"
 #include "../AESDecryptionSequential/aesdecryption.cpp"
 #include <omp.h>
-//#include <fstream>
-//using namespace std;
+#include <fstream>
+using namespace std;
 
 static void generateTestData();
 int main(int argc, const char * argv[]) {
@@ -118,7 +118,7 @@ int main(int argc, const char * argv[]) {
     fclose(fw);
     return 0;
 }
-/*
+
 void generateTestData(){
     char testinputs[][5] = {"tush", "madh", "jaya", "abcd", "efgh", "tmmr", "baga", "umbe", "jita", "gaut"};
     
@@ -133,6 +133,6 @@ void generateTestData(){
     
     myfile.close();
 }
-     */
+     
 
 
